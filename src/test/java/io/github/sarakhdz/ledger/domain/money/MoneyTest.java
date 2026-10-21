@@ -82,4 +82,9 @@ class MoneyTest {
         assertThatThrownBy(() -> ten.isGreaterThan(Money.of("5.00", "USD")))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void toStringShowsCurrencyThenAmount() {
+        assertThat(Money.of("10", "EUR")).hasToString("EUR 10.00");
+    }
 }

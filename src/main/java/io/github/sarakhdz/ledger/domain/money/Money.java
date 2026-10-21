@@ -63,6 +63,11 @@ public record Money(BigDecimal amount, Currency currency) {
         return amount().compareTo(other.amount()) < 0;
     }
 
+    @Override
+    public String toString() {
+        return currency().getCurrencyCode() + " " + amount().toPlainString();
+    }
+
     private void requireSameCurrency(Money other) {
         if (!currency().equals(other.currency())) {
             throw new IllegalArgumentException("Currency mismatch: " + currency().getCurrencyCode()
