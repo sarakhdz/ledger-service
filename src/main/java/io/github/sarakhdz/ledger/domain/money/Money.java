@@ -16,7 +16,7 @@ public record Money(BigDecimal amount, Currency currency) {
         }
         try {
             amount = amount.setScale(currency.getDefaultFractionDigits(), RoundingMode.UNNECESSARY);
-        }catch (ArithmeticException e) {
+        } catch (ArithmeticException e) {
             throw new IllegalArgumentException(currency.getCurrencyCode() + " allows at most "
                     + currency.getDefaultFractionDigits() + " decimals, got: " + amount);
         }
@@ -30,12 +30,6 @@ public record Money(BigDecimal amount, Currency currency) {
         return of("0", currencyCode);
     }
 
-    private void requireSameCurrency(Money other) {
-        if (!currency().equals(other.currency())) {
-            throw new IllegalArgumentException("Currency mismatch: " + currency.getCurrencyCode()
-                    + " and " + other.currency().getCurrencyCode());
-        }
-    }
 
     public Money add(Money other) {
         requireSameCurrency(other);
@@ -49,5 +43,30 @@ public record Money(BigDecimal amount, Currency currency) {
 
     public Money negate() {
         return new Money(amount().negate(), currency());
+    }
+
+    public boolean isPositive() {
+        return amount().signum() > 0;
+    }
+
+    public boolean isNegative() {
+        return amount().signum() < 0;
+    }
+
+    public boolean isGreaterThan(Money other) {
+        requireSameCurrency(other);
+        return amount().compareTo(other.amount()) > 0;
+    }
+
+    public boolean isLessThan(Money other) {
+        requireSameCurrency(other);
+        return amount().compareTo(other.amount()) < 0;
+    }
+
+    private void requireSameCurrency(Money other) {
+        if (!currency().equals(other.currency())) {
+            throw new IllegalArgumentException("Currency mismatch: " + currency().getCurrencyCode()
+                    + " and " + other.currency().getCurrencyCode());
+        }
     }
 }

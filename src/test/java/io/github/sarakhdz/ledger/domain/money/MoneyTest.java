@@ -65,4 +65,21 @@ class MoneyTest {
         assertThatThrownBy(() -> eur.add(usd)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> eur.subtract(usd)).isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void comparesAmountsInTheSameCurrency() {
+        Money ten = Money.of("10.00", "EUR");
+        Money five = Money.of("5.00", "EUR");
+        Money zero = Money.zero("EUR");
+
+        assertThat(ten.isPositive()).isTrue();
+        assertThat(ten.negate().isNegative()).isTrue();
+        assertThat(zero.isPositive()).isFalse();
+        assertThat(zero.isNegative()).isFalse();
+        assertThat(ten.isGreaterThan(five)).isTrue();
+        assertThat(five.isLessThan(ten)).isTrue();
+        assertThat(ten.isGreaterThan(ten)).isFalse();
+        assertThatThrownBy(() -> ten.isGreaterThan(Money.of("5.00", "USD")))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }
