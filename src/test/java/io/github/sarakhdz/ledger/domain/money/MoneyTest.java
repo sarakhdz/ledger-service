@@ -81,6 +81,8 @@ class MoneyTest {
         assertThat(zero.isNegative()).isFalse();
         assertThat(ten.isGreaterThan(five)).isTrue();
         assertThat(five.isLessThan(ten)).isTrue();
+        assertThatThrownBy(() -> five.isLessThan(Money.of("5.00", "USD")))
+                .isInstanceOf(IllegalArgumentException.class);
         assertThat(ten.isGreaterThan(ten)).isFalse();
         assertThatThrownBy(() -> ten.isGreaterThan(Money.of("5.00", "USD")))
                 .isInstanceOf(IllegalArgumentException.class);

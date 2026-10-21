@@ -30,7 +30,6 @@ public record Money(BigDecimal amount, Currency currency) {
         return of("0", currencyCode);
     }
 
-
     public Money add(Money other) {
         requireSameCurrency(other);
         return new Money(amount().add(other.amount()), currency());
