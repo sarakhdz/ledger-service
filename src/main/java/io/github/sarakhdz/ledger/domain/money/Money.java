@@ -29,4 +29,25 @@ public record Money(BigDecimal amount, Currency currency) {
     public static Money zero(String currencyCode) {
         return of("0", currencyCode);
     }
+
+    private void requireSameCurrency(Money other) {
+        if (!currency().equals(other.currency())) {
+            throw new IllegalArgumentException("Currency mismatch: " + currency.getCurrencyCode()
+                    + " and " + other.currency().getCurrencyCode());
+        }
+    }
+
+    public Money add(Money other) {
+        requireSameCurrency(other);
+        return new Money(amount().add(other.amount()), currency());
+    }
+
+    public Money subtract(Money other) {
+        requireSameCurrency(other);
+        return new Money(amount().subtract(other.amount()), currency());
+    }
+
+    public Money negate() {
+        return new Money(amount().negate(), currency());
+    }
 }

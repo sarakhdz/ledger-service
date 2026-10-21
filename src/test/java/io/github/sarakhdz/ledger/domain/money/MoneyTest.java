@@ -46,4 +46,23 @@ class MoneyTest {
                 .isInstanceOf(NullPointerException.class)
                 .hasMessage("currency must not be null");
     }
+
+    @Test
+    void addSubtractAndNegateReturnNewValues() {
+        Money ten = Money.of("10.00", "EUR");
+        Money threeFifty = Money.of("3.50", "EUR");
+
+        assertThat(ten.add(threeFifty)).isEqualTo(Money.of("13.50", "EUR"));
+        assertThat(ten.subtract(threeFifty)).isEqualTo(Money.of("6.50", "EUR"));
+        assertThat(threeFifty.negate()).isEqualTo(Money.of("-3.50", "EUR"));
+        assertThat(ten).isEqualTo(Money.of("10.00", "EUR"));   // the original didn't change
+    }
+
+    @Test
+    void rejectsArithmeticAcrossCurrencies() {
+        Money eur = Money.of("10.00", "EUR");
+        Money usd = Money.of("10.00", "USD");
+        assertThatThrownBy(() -> eur.add(usd)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> eur.subtract(usd)).isInstanceOf(IllegalArgumentException.class);
+    }
 }
