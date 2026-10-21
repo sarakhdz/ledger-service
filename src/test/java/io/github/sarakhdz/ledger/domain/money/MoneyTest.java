@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.Currency;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -86,5 +89,11 @@ class MoneyTest {
     @Test
     void toStringShowsCurrencyThenAmount() {
         assertThat(Money.of("10", "EUR")).hasToString("EUR 10.00");
+    }
+
+    @Test
+    void equalValuesAreOneKeyInAHashSet() {
+        Set<Money> set = new HashSet<>(List.of(Money.of("10.0", "EUR"), Money.of("10.00", "EUR")));
+        assertThat(set).hasSize(1);
     }
 }
