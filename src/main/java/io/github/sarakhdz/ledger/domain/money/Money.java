@@ -7,7 +7,11 @@ import java.util.Currency;
 public record Money(BigDecimal amount, Currency currency) {
 
     public Money {
-        amount = amount.setScale(currency.getDefaultFractionDigits(), RoundingMode.UNNECESSARY);
+        try {
+            amount = amount.setScale(currency.getDefaultFractionDigits(), RoundingMode.UNNECESSARY);
+        }catch (ArithmeticException e) {
+            throw new IllegalArgumentException("This currency allows at most 2 decimals");
+        }
     }
 
     public static Money of(String amount, String currencyCode) {

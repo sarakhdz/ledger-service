@@ -13,4 +13,10 @@ class MoneyTest {
         assertThat(Money.of("10.0", "EUR").hashCode())
                 .isEqualTo(Money.of("10.00", "EUR").hashCode());
     }
+
+    @Test
+    void rejectsMoreDecimalsThanTheCurrencyAllows() {
+        assertThatThrownBy(() -> Money.of("10.001", "EUR"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }
