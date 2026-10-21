@@ -7,10 +7,14 @@ import java.util.Currency;
 public record Money(BigDecimal amount, Currency currency) {
 
     public Money {
+        if (currency.getDefaultFractionDigits() < 0) {
+            throw new IllegalArgumentException("Not a monetary currency: " + currency.getCurrencyCode());
+        }
         try {
             amount = amount.setScale(currency.getDefaultFractionDigits(), RoundingMode.UNNECESSARY);
         }catch (ArithmeticException e) {
-            throw new IllegalArgumentException("This currency allows at most 2 decimals");
+            throw new IllegalArgumentException(currency.getCurrencyCode() + " allows at most "
+                    + currency.getDefaultFractionDigits() + " decimals, got: " + amount);
         }
     }
 
