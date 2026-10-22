@@ -1,4 +1,39 @@
 package io.github.sarakhdz.ledger.domain.account;
 
+import io.github.sarakhdz.ledger.domain.money.Money;
+import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+
 public class AccountTest {
+
+    @Test
+    void newSavingsAccountStartsAtZero() {
+        Account account = Account.openSavingsAccount();
+
+        assertThat(account.balance()).isEqualTo(Money.zero("EUR"));
+        assertThat(account.productType()).isEqualTo(ProductType.SAVINGS_ACCOUNT);
+    }
+
+    @Test
+    void depositIncreasesTheBalance() {
+        Account account = Account.openSavingsAccount();
+        account.deposit(Money.of("100.00", "EUR"));
+        account.deposit(Money.of("25.50", "EUR"));
+
+        assertThat(account.balance()).isEqualTo(Money.of("125.50", "EUR"));
+    }
+
+    @Test
+    void rejectsZeroNegativeAndForeignDeposits() {
+        Account account = Account.openSavingsAccount();
+
+        assertThatThrownBy(() -> account.deposit(Money.of("0.00", "EUR")))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> account.deposit(Money.of("-5.00", "EUR")))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> account.deposit(Money.of("5.00", "USD")))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(account.balance()).isEqualTo(Money.zero("EUR"));   // nothing changed
+    }
 }
