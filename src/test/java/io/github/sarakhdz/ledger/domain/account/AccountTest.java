@@ -83,5 +83,15 @@ public class AccountTest {
         assertThat(account.balance()).isEqualTo(Money.zero("EUR"));
     }
 
+    @Test
+    void accountsWithTheSameIdAreEqualWhateverTheirBalance() {
+        AccountId id = AccountId.newId();
+        Account first = Account.openSavingsAccount(id);
+        Account second = Account.openSavingsAccount(id);
+        second.deposit(Money.of("50.00", "EUR"));
 
+        assertThat(first).isEqualTo(second);
+        assertThat(first.hashCode()).isEqualTo(second.hashCode());
+        assertThat(first).isNotEqualTo(Account.openSavingsAccount());   // different id
+    }
 }

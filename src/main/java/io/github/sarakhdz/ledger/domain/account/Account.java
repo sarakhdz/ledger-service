@@ -19,8 +19,12 @@ public final class Account {
     }
 
     public static Account openSavingsAccount() {
-        return new Account(AccountId.newId(), ProductType.SAVINGS_ACCOUNT,
-                new NoOverdraftPolicy());
+        return openSavingsAccount(AccountId.newId());
+    }
+
+    public static Account openSavingsAccount(AccountId id) {
+        Objects.requireNonNull(id, "id must not be null");
+        return new Account(id, ProductType.SAVINGS_ACCOUNT, new NoOverdraftPolicy());
     }
 
     public static Account openCurrentAccount(Money overdraftLimit) {
@@ -60,5 +64,16 @@ public final class Account {
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Account other = (Account) o;
+        return id.equals(other.id);
+    }
 
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
 }

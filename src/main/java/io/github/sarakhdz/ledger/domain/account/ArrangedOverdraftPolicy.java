@@ -18,6 +18,6 @@ public final class ArrangedOverdraftPolicy implements WithdrawalPolicy{
 
     @Override
     public boolean allows(Money currentBalance, Money amount) {
-        return currentBalance.subtract(amount).isLessThan(limit.negate());
+        return !currentBalance.subtract(amount).isLessThan(limit.negate());
     }
 }
