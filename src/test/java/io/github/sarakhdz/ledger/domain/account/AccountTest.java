@@ -3,7 +3,7 @@ package io.github.sarakhdz.ledger.domain.account;
 import io.github.sarakhdz.ledger.domain.money.Money;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class AccountTest {
 
@@ -93,5 +93,17 @@ public class AccountTest {
         assertThat(first).isEqualTo(second);
         assertThat(first.hashCode()).isEqualTo(second.hashCode());
         assertThat(first).isNotEqualTo(Account.openSavingsAccount());   // different id
+    }
+
+    @Test
+    void currentAccountWithZeroLimitCannotGoBelowZero() {
+        Account account = Account.openCurrentAccount(Money.zero("EUR"));
+        account.deposit(Money.of("10.00", "EUR"));
+
+        account.withdraw(Money.of("10.00", "EUR"));
+        assertThat(account.balance()).isEqualTo(Money.zero("EUR"));
+
+        assertThatThrownBy(() -> account.withdraw(Money.of("0.01", "EUR")))
+                .isInstanceOf(IllegalStateException.class);
     }
 }
