@@ -82,4 +82,6 @@ public class AccountTest {
                 .isInstanceOf(IllegalArgumentException.class);
         assertThat(account.balance()).isEqualTo(Money.zero("EUR"));
     }
+
+
 }
