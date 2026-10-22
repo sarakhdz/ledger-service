@@ -36,4 +36,50 @@ public class AccountTest {
                 .isInstanceOf(IllegalArgumentException.class);
         assertThat(account.balance()).isEqualTo(Money.zero("EUR"));   // nothing changed
     }
+
+    @Test
+    void savingsCanWithdrawTheFullBalanceButNotOneCentMore() {
+        Account account = Account.openSavingsAccount();
+        account.deposit(Money.of("100.00", "EUR"));
+
+        assertThatThrownBy(() -> account.withdraw(Money.of("100.01", "EUR")))
+                .isInstanceOf(IllegalStateException.class);
+        assertThat(account.balance()).isEqualTo(Money.of("100.00", "EUR"));   // unchanged
+
+        account.withdraw(Money.of("100.00", "EUR"));
+        assertThat(account.balance()).isEqualTo(Money.zero("EUR"));
+    }
+
+    @Test
+    void currentAccountCanGoDownToTheOverdraftLimitButNotBeyond() {
+        Account account = Account.openCurrentAccount(Money.of("500.00", "EUR"));
+
+        assertThat(account.productType()).isEqualTo(ProductType.CURRENT_ACCOUNT);
+
+        account.withdraw(Money.of("500.00", "EUR"));
+        assertThat(account.balance()).isEqualTo(Money.of("-500.00", "EUR"));
+
+        assertThatThrownBy(() -> account.withdraw(Money.of("0.01", "EUR")))
+                .isInstanceOf(IllegalStateException.class);
+        assertThat(account.balance()).isEqualTo(Money.of("-500.00", "EUR"));
+    }
+
+    @Test
+    void rejectsNegativeOverdraftLimit() {
+        assertThatThrownBy(() -> Account.openCurrentAccount(Money.of("-1.00", "EUR")))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void rejectsZeroNegativeAndForeignWithdrawals() {
+        Account account = Account.openCurrentAccount(Money.of("100.00", "EUR"));
+
+        assertThatThrownBy(() -> account.withdraw(Money.of("0.00", "EUR")))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> account.withdraw(Money.of("-5.00", "EUR")))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> account.withdraw(Money.of("5.00", "USD")))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(account.balance()).isEqualTo(Money.zero("EUR"));
+    }
 }
