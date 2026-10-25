@@ -158,4 +158,22 @@ public class AccountTest {
                 .isInstanceOf(UnsupportedOperationException.class);
         assertThat(account.entries()).hasSize(1);
     }
+
+    @Test
+    void balanceAlwaysMatchesTheEntries() {
+        Account account = Account.openCurrentAccount(Money.of("200.00", "EUR"), clock);
+        account.deposit(Money.of("100.00", "EUR"));
+        account.withdraw(Money.of("250.00", "EUR"));
+        account.deposit(Money.of("40.00", "EUR"));
+
+        Money total = Money.zero("EUR");
+        for (LedgerEntry entry : account.entries()) {
+            if (entry.type() == EntryType.DEPOSIT) {
+                total = total.add(entry.amount());
+            } else {
+                total = total.subtract(entry.amount());
+            }
+        }
+        assertThat(account.balance()).isEqualTo(total);
+    }
 }
