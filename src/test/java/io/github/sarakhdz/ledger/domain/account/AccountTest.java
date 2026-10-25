@@ -114,4 +114,18 @@ public class AccountTest {
         assertThatThrownBy(() -> account.withdraw(Money.of("0.01", "EUR")))
                 .isInstanceOf(IllegalStateException.class);
     }
+
+    @Test
+    void depositRecordsALedgerEntry() {
+        Account account = Account.openSavingsAccount(clock);
+        account.deposit(Money.of("100.00", "EUR"));
+
+        assertThat(account.entries()).hasSize(1);
+        LedgerEntry entry = account.entries().get(0);
+        assertThat(entry.type()).isEqualTo(EntryType.DEPOSIT);
+        assertThat(entry.amount()).isEqualTo(Money.of("100.00", "EUR"));
+        assertThat(entry.balanceAfter()).isEqualTo(Money.of("100.00", "EUR"));
+        assertThat(entry.accountId()).isEqualTo(account.id());
+        assertThat(entry.occurredAt()).isEqualTo(NOW);
+    }
 }

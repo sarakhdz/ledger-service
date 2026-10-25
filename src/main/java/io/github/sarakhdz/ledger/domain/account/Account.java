@@ -3,7 +3,10 @@ package io.github.sarakhdz.ledger.domain.account;
 import io.github.sarakhdz.ledger.domain.money.Money;
 
 import java.time.Clock;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 public final class Account {
 
@@ -12,6 +15,8 @@ public final class Account {
     private final WithdrawalPolicy withdrawalPolicy;
     private final Clock clock;
     private Money balance;
+
+    private final List<LedgerEntry> entries = new ArrayList<>();
 
 
     private Account(AccountId id, ProductType productType, WithdrawalPolicy withdrawalPolicy, Clock clock) {
@@ -50,6 +55,7 @@ public final class Account {
     public void deposit(Money amount) {
         requireValidAmount(amount);
         balance = balance.add(amount);
+        record(EntryType.DEPOSIT, amount);
     }
 
     public void withdraw(Money amount) {
@@ -60,11 +66,19 @@ public final class Account {
         balance = balance.subtract(amount);
     }
 
+    public List<LedgerEntry> entries() {
+        return entries;
+    }
+
     private void requireValidAmount(Money amount) {
         Objects.requireNonNull(amount, "amount must not be null");
         if (!amount.isPositive()) {
             throw new IllegalArgumentException("Amount must be positive, got: " + amount);
         }
+    }
+
+    private void record(EntryType type, Money amount) {
+        entries.add(new LedgerEntry(UUID.randomUUID(), id, type, amount, balance, clock.instant()));
     }
 
     @Override
