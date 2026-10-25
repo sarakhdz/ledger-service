@@ -2,6 +2,7 @@ package io.github.sarakhdz.ledger.domain.account;
 
 import io.github.sarakhdz.ledger.domain.money.Money;
 
+import java.time.Clock;
 import java.util.Objects;
 
 public final class Account {
@@ -9,27 +10,29 @@ public final class Account {
     private final AccountId id;
     private final ProductType productType;
     private final WithdrawalPolicy withdrawalPolicy;
+    private final Clock clock;
     private Money balance;
 
-    private Account(AccountId id, ProductType productType, WithdrawalPolicy withdrawalPolicy) {
-        this.id = id;
+
+    private Account(AccountId id, ProductType productType, WithdrawalPolicy withdrawalPolicy, Clock clock) {
+        this.id = Objects.requireNonNull(id, "id must not be null");
         this.balance = Money.zero("EUR");
         this.productType = productType;
         this.withdrawalPolicy = withdrawalPolicy;
+        this.clock = Objects.requireNonNull(clock, "clock must not be null");
     }
 
-    public static Account openSavingsAccount() {
-        return openSavingsAccount(AccountId.newId());
+    public static Account openSavingsAccount(Clock clock) {
+        return openSavingsAccount(AccountId.newId(), clock);
     }
 
-    public static Account openSavingsAccount(AccountId id) {
-        Objects.requireNonNull(id, "id must not be null");
-        return new Account(id, ProductType.SAVINGS_ACCOUNT, new NoOverdraftPolicy());
+    public static Account openSavingsAccount(AccountId id, Clock clock) {
+        return new Account(id, ProductType.SAVINGS_ACCOUNT, new NoOverdraftPolicy(), clock);
     }
 
-    public static Account openCurrentAccount(Money overdraftLimit) {
+    public static Account openCurrentAccount(Money overdraftLimit, Clock clock) {
         return new Account(AccountId.newId(), ProductType.CURRENT_ACCOUNT,
-                new ArrangedOverdraftPolicy(overdraftLimit));
+                new ArrangedOverdraftPolicy(overdraftLimit), clock);
     }
 
     public AccountId id() {
