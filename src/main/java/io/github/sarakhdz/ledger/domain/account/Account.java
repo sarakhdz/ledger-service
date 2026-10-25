@@ -64,6 +64,7 @@ public final class Account {
             throw new IllegalStateException("Withdrawal of " + amount + " not allowed, balance is " + balance);
         }
         balance = balance.subtract(amount);
+        record(EntryType.WITHDRAWAL, amount);
     }
 
     public List<LedgerEntry> entries() {

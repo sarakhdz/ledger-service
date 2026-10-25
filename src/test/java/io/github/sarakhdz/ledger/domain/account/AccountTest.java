@@ -128,4 +128,22 @@ public class AccountTest {
         assertThat(entry.accountId()).isEqualTo(account.id());
         assertThat(entry.occurredAt()).isEqualTo(NOW);
     }
+
+    @Test
+    void withdrawalRecordsAnEntryAndRejectedOperationsRecordNothing() {
+        Account account = Account.openSavingsAccount(clock);
+        account.deposit(Money.of("100.00", "EUR"));
+        account.withdraw(Money.of("30.00", "EUR"));
+
+        assertThatThrownBy(() -> account.withdraw(Money.of("500.00", "EUR")))
+                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> account.deposit(Money.of("0.00", "EUR")))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(account.entries()).hasSize(2);      // the two failures added nothing
+        LedgerEntry withdrawal = account.entries().get(1);
+        assertThat(withdrawal.type()).isEqualTo(EntryType.WITHDRAWAL);
+        assertThat(withdrawal.amount()).isEqualTo(Money.of("30.00", "EUR"));
+        assertThat(withdrawal.balanceAfter()).isEqualTo(Money.of("70.00", "EUR"));
+    }
 }
