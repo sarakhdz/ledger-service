@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -145,5 +146,16 @@ public class AccountTest {
         assertThat(withdrawal.type()).isEqualTo(EntryType.WITHDRAWAL);
         assertThat(withdrawal.amount()).isEqualTo(Money.of("30.00", "EUR"));
         assertThat(withdrawal.balanceAfter()).isEqualTo(Money.of("70.00", "EUR"));
+    }
+
+    @Test
+    void entriesCannotBeModifiedFromOutside() {
+        Account account = Account.openSavingsAccount(clock);
+        account.deposit(Money.of("10.00", "EUR"));
+
+        List<LedgerEntry> entries = account.entries();
+        assertThatThrownBy(() -> entries.clear())
+                .isInstanceOf(UnsupportedOperationException.class);
+        assertThat(account.entries()).hasSize(1);
     }
 }

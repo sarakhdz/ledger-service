@@ -36,8 +36,7 @@ public final class Account {
     }
 
     public static Account openCurrentAccount(Money overdraftLimit, Clock clock) {
-        return new Account(AccountId.newId(), ProductType.CURRENT_ACCOUNT,
-                new ArrangedOverdraftPolicy(overdraftLimit), clock);
+        return new Account(AccountId.newId(), ProductType.CURRENT_ACCOUNT, new ArrangedOverdraftPolicy(overdraftLimit), clock);
     }
 
     public AccountId id() {
@@ -68,7 +67,7 @@ public final class Account {
     }
 
     public List<LedgerEntry> entries() {
-        return entries;
+        return List.copyOf(entries);
     }
 
     private void requireValidAmount(Money amount) {
