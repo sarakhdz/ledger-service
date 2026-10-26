@@ -1,5 +1,6 @@
 package io.github.sarakhdz.ledger.domain.account;
 
+import io.github.sarakhdz.ledger.domain.money.InvalidAmountException;
 import io.github.sarakhdz.ledger.domain.money.Money;
 
 import java.time.Clock;
@@ -59,7 +60,7 @@ public final class Account {
     public void withdraw(Money amount) {
         requireValidAmount(amount);
         if (!withdrawalPolicy.allows(balance, amount)) {
-            throw new IllegalStateException("Withdrawal of " + amount + " not allowed, balance is " + balance);
+            throw new InsufficientFundsException(id, amount, balance);
         }
         balance = balance.subtract(amount);
         record(EntryType.WITHDRAWAL, amount);
@@ -72,7 +73,7 @@ public final class Account {
     private void requireValidAmount(Money amount) {
         Objects.requireNonNull(amount, "amount must not be null");
         if (!amount.isPositive()) {
-            throw new IllegalArgumentException("Amount must be positive, got: " + amount);
+            throw new InvalidAmountException("Amount must be positive, got: " + amount);
         }
     }
 

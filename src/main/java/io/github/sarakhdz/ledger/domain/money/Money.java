@@ -17,7 +17,7 @@ public record Money(BigDecimal amount, Currency currency) {
         try {
             amount = amount.setScale(currency.getDefaultFractionDigits(), RoundingMode.UNNECESSARY);
         } catch (ArithmeticException e) {
-            throw new IllegalArgumentException(currency.getCurrencyCode() + " allows at most "
+            throw new InvalidAmountException(currency.getCurrencyCode() + " allows at most "
                     + currency.getDefaultFractionDigits() + " decimals, got: " + amount);
         }
     }
@@ -69,8 +69,7 @@ public record Money(BigDecimal amount, Currency currency) {
 
     private void requireSameCurrency(Money other) {
         if (!currency().equals(other.currency())) {
-            throw new IllegalArgumentException("Currency mismatch: " + currency().getCurrencyCode()
-                    + " and " + other.currency().getCurrencyCode());
+            throw new CurrencyMismatchException(currency(), other.currency());
         }
     }
 }
