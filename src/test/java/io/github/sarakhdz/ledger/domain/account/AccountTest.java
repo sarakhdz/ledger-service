@@ -11,7 +11,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class AccountTest {
+class AccountTest {
 
     private static final Instant NOW = Instant.parse("2026-10-24T10:00:00Z");
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);

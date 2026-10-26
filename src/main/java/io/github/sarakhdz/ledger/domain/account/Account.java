@@ -15,9 +15,7 @@ public final class Account {
     private final WithdrawalPolicy withdrawalPolicy;
     private final Clock clock;
     private Money balance;
-
     private final List<LedgerEntry> entries = new ArrayList<>();
-
 
     private Account(AccountId id, ProductType productType, WithdrawalPolicy withdrawalPolicy, Clock clock) {
         this.id = Objects.requireNonNull(id, "id must not be null");
@@ -36,7 +34,8 @@ public final class Account {
     }
 
     public static Account openCurrentAccount(Money overdraftLimit, Clock clock) {
-        return new Account(AccountId.newId(), ProductType.CURRENT_ACCOUNT, new ArrangedOverdraftPolicy(overdraftLimit), clock);
+        return new Account(AccountId.newId(), ProductType.CURRENT_ACCOUNT,
+                new ArrangedOverdraftPolicy(overdraftLimit), clock);
     }
 
     public AccountId id() {
