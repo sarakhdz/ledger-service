@@ -4,7 +4,7 @@ import io.github.sarakhdz.ledger.domain.money.Money;
 
 import java.util.Objects;
 
-public final class ArrangedOverdraftPolicy implements WithdrawalPolicy{
+public final class ArrangedOverdraftPolicy implements WithdrawalPolicy {
 
     private final Money limit;
 

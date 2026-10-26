@@ -1,7 +1,5 @@
 package io.github.sarakhdz.ledger.domain.account;
 
-import io.github.sarakhdz.ledger.domain.account.AccountId;
-import io.github.sarakhdz.ledger.domain.account.EntryType;
 import io.github.sarakhdz.ledger.domain.money.Money;
 
 import java.time.Instant;
