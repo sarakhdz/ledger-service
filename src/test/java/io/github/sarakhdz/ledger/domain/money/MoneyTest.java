@@ -23,14 +23,14 @@ class MoneyTest {
     @Test
     void rejectsMoreDecimalsThanTheCurrencyAllows() {
         assertThatThrownBy(() -> Money.of("10.001", "EUR"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidAmountException.class);
     }
 
     @Test
     void zeroDecimalCurrenciesAcceptWholeAmountsOnly() {
         assertThat(Money.of("100", "JPY").amount()).isEqualTo(new BigDecimal("100"));
         assertThatThrownBy(() -> Money.of("100.5", "JPY"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidAmountException.class);
     }
 
     @Test
@@ -65,8 +65,8 @@ class MoneyTest {
     void rejectsArithmeticAcrossCurrencies() {
         Money eur = Money.of("10.00", "EUR");
         Money usd = Money.of("10.00", "USD");
-        assertThatThrownBy(() -> eur.add(usd)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> eur.subtract(usd)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> eur.add(usd)).isInstanceOf(CurrencyMismatchException.class);
+        assertThatThrownBy(() -> eur.subtract(usd)).isInstanceOf(CurrencyMismatchException.class);
     }
 
     @Test
@@ -82,10 +82,10 @@ class MoneyTest {
         assertThat(ten.isGreaterThan(five)).isTrue();
         assertThat(five.isLessThan(ten)).isTrue();
         assertThatThrownBy(() -> five.isLessThan(Money.of("5.00", "USD")))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(CurrencyMismatchException.class);
         assertThat(ten.isGreaterThan(ten)).isFalse();
         assertThatThrownBy(() -> ten.isGreaterThan(Money.of("5.00", "USD")))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(CurrencyMismatchException.class);
     }
 
     @Test

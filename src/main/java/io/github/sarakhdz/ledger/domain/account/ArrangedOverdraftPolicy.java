@@ -1,5 +1,6 @@
 package io.github.sarakhdz.ledger.domain.account;
 
+import io.github.sarakhdz.ledger.domain.money.InvalidAmountException;
 import io.github.sarakhdz.ledger.domain.money.Money;
 
 import java.util.Objects;
@@ -11,7 +12,7 @@ public final class ArrangedOverdraftPolicy implements WithdrawalPolicy {
     public ArrangedOverdraftPolicy(Money limit) {
         Objects.requireNonNull(limit, "limit must not be null");
         if (limit.isNegative()) {
-            throw new IllegalArgumentException("Limit must not be negative, got: " + limit);
+            throw new InvalidAmountException("Limit must not be negative, got: " + limit);
         }
         this.limit = limit;
     }

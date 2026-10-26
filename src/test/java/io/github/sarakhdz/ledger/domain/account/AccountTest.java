@@ -1,5 +1,7 @@
 package io.github.sarakhdz.ledger.domain.account;
 
+import io.github.sarakhdz.ledger.domain.money.CurrencyMismatchException;
+import io.github.sarakhdz.ledger.domain.money.InvalidAmountException;
 import io.github.sarakhdz.ledger.domain.money.Money;
 import org.junit.jupiter.api.Test;
 
@@ -38,11 +40,11 @@ class AccountTest {
         Account account = Account.openSavingsAccount(clock);
 
         assertThatThrownBy(() -> account.deposit(Money.of("0.00", "EUR")))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidAmountException.class);
         assertThatThrownBy(() -> account.deposit(Money.of("-5.00", "EUR")))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidAmountException.class);
         assertThatThrownBy(() -> account.deposit(Money.of("5.00", "USD")))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(CurrencyMismatchException.class);
         assertThat(account.balance()).isEqualTo(Money.zero("EUR"));   // nothing changed
     }
 
@@ -52,7 +54,7 @@ class AccountTest {
         account.deposit(Money.of("100.00", "EUR"));
 
         assertThatThrownBy(() -> account.withdraw(Money.of("100.01", "EUR")))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InsufficientFundsException.class);
         assertThat(account.balance()).isEqualTo(Money.of("100.00", "EUR"));   // unchanged
 
         account.withdraw(Money.of("100.00", "EUR"));
@@ -69,14 +71,14 @@ class AccountTest {
         assertThat(account.balance()).isEqualTo(Money.of("-500.00", "EUR"));
 
         assertThatThrownBy(() -> account.withdraw(Money.of("0.01", "EUR")))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InsufficientFundsException.class);
         assertThat(account.balance()).isEqualTo(Money.of("-500.00", "EUR"));
     }
 
     @Test
     void rejectsNegativeOverdraftLimit() {
         assertThatThrownBy(() -> Account.openCurrentAccount(Money.of("-1.00", "EUR"), clock))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidAmountException.class);
     }
 
     @Test
@@ -84,11 +86,11 @@ class AccountTest {
         Account account = Account.openCurrentAccount(Money.of("100.00", "EUR"), clock);
 
         assertThatThrownBy(() -> account.withdraw(Money.of("0.00", "EUR")))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidAmountException.class);
         assertThatThrownBy(() -> account.withdraw(Money.of("-5.00", "EUR")))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidAmountException.class);
         assertThatThrownBy(() -> account.withdraw(Money.of("5.00", "USD")))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(CurrencyMismatchException.class);
         assertThat(account.balance()).isEqualTo(Money.zero("EUR"));
     }
 
@@ -113,7 +115,7 @@ class AccountTest {
         assertThat(account.balance()).isEqualTo(Money.zero("EUR"));
 
         assertThatThrownBy(() -> account.withdraw(Money.of("0.01", "EUR")))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InsufficientFundsException.class);
     }
 
     @Test
@@ -137,9 +139,9 @@ class AccountTest {
         account.withdraw(Money.of("30.00", "EUR"));
 
         assertThatThrownBy(() -> account.withdraw(Money.of("500.00", "EUR")))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InsufficientFundsException.class);
         assertThatThrownBy(() -> account.deposit(Money.of("0.00", "EUR")))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidAmountException.class);
 
         assertThat(account.entries()).hasSize(2);      // the two failures added nothing
         LedgerEntry withdrawal = account.entries().get(1);
