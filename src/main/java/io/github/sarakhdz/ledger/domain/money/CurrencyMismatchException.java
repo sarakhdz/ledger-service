@@ -4,10 +4,10 @@ import io.github.sarakhdz.ledger.domain.shared.DomainException;
 
 import java.util.Currency;
 
-public class CurrencyMismatchException extends DomainException {
+public final class CurrencyMismatchException extends DomainException {
 
     public CurrencyMismatchException(Currency expected, Currency actual) {
         super("CURRENCY_MISMATCH",
-                "Currency mismatch: " + expected.getCurrencyCode() + "and " + actual.getCurrencyCode());
+                "Currency mismatch: " + expected.getCurrencyCode() + " and " + actual.getCurrencyCode());
     }
 }

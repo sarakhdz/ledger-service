@@ -187,4 +187,13 @@ class AccountTest {
                 .isInstanceOfSatisfying(InsufficientFundsException.class,
                         e -> assertThat(e.errorCode()).isEqualTo("INSUFFICIENT_FUNDS"));
     }
+
+    @Test
+    void invalidAmountCarriesItsErrorCode() {
+        Account account = Account.openSavingsAccount(clock);
+
+        assertThatThrownBy(() -> account.deposit(Money.of("0.00", "EUR")))
+                .isInstanceOfSatisfying(InvalidAmountException.class,
+                        e -> assertThat(e.errorCode()).isEqualTo("INVALID_AMOUNT"));
+    }
 }
