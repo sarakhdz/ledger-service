@@ -8,7 +8,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class LedgerEntryTest {
+class LedgerEntryTest {
 
     @Test
     void rejectsNonPositiveAmounts() {
