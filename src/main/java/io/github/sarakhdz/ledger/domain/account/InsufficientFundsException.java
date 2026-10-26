@@ -6,7 +6,7 @@ import io.github.sarakhdz.ledger.domain.shared.DomainException;
 public class InsufficientFundsException extends DomainException {
 
     public InsufficientFundsException(AccountId accountId, Money requested, Money balance) {
-        super("INSUFFICIENT FUNDS",
+        super("INSUFFICIENT_FUNDS",
                 "Withdrawal of " + requested + "not allowed for account " + accountId.value()
                         + ", balance is " + balance);
     }

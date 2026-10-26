@@ -178,4 +178,13 @@ class AccountTest {
         }
         assertThat(account.balance()).isEqualTo(total);
     }
+
+    @Test
+    void refusedWithdrawalCarriesItsErrorCode() {
+        Account account = Account.openSavingsAccount(clock);
+
+        assertThatThrownBy(() -> account.withdraw(Money.of("1.00", "EUR")))
+                .isInstanceOfSatisfying(InsufficientFundsException.class,
+                        e -> assertThat(e.errorCode()).isEqualTo("INSUFFICIENT_FUNDS"));
+    }
 }

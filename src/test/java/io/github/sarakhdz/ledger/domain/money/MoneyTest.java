@@ -98,4 +98,11 @@ class MoneyTest {
         Set<Money> set = new HashSet<>(List.of(Money.of("10.0", "EUR"), Money.of("10.00", "EUR")));
         assertThat(set).hasSize(1);
     }
+
+    @Test
+    void currencyMismatchCarriesItsErrorCode() {
+        assertThatThrownBy(() -> Money.of("1.00", "EUR").add(Money.of("1.00", "USD")))
+                .isInstanceOfSatisfying(CurrencyMismatchException.class,
+                        e -> assertThat(e.errorCode()).isEqualTo("CURRENCY_MISMATCH"));
+    }
 }
