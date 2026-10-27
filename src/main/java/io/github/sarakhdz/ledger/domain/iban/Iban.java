@@ -1,4 +1,4 @@
-package io.github.sarakhdz.ledger.domain.account;
+package io.github.sarakhdz.ledger.domain.iban;
 
 import java.math.BigInteger;
 import java.util.Objects;
