@@ -51,4 +51,5 @@ class IbanTest {
         assertThatThrownBy(() -> Iban.parse("NL91ABNA0417164301"))
                 .hasMessageNotContaining("0417164301");
     }
+
 }
