@@ -24,4 +24,16 @@ class IbanTest {
         assertThatThrownBy(() -> Iban.parse("NL91AB_A0417164300"))     // a symbol in the bank code
                 .isInstanceOf(InvalidIbanException.class);
     }
+
+    @Test
+    void acceptsValidCheckDigits() {
+        assertThat(Iban.parse("NL91ABNA0417164300").value()).isEqualTo("NL91ABNA0417164300");
+        assertThat(Iban.parse("NL26LEDG0123456789").value()).isEqualTo("NL26LEDG0123456789");
+    }
+
+    @Test
+    void rejectsWrongCheckDigits() {
+        assertThatThrownBy(() -> Iban.parse("NL91ABNA0417164301"))   // last digit changed
+                .isInstanceOf(InvalidIbanException.class);
+    }
 }
