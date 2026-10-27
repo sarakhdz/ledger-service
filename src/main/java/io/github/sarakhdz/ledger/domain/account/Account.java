@@ -1,5 +1,6 @@
 package io.github.sarakhdz.ledger.domain.account;
 
+import io.github.sarakhdz.ledger.domain.iban.Iban;
 import io.github.sarakhdz.ledger.domain.money.InvalidAmountException;
 import io.github.sarakhdz.ledger.domain.money.Money;
 
@@ -12,30 +13,32 @@ import java.util.UUID;
 public final class Account {
 
     private final AccountId id;
+    private final Iban iban;
     private final ProductType productType;
     private final WithdrawalPolicy withdrawalPolicy;
     private final Clock clock;
     private Money balance;
     private final List<LedgerEntry> entries = new ArrayList<>();
 
-    private Account(AccountId id, ProductType productType, WithdrawalPolicy withdrawalPolicy, Clock clock) {
+    private Account(AccountId id, Iban iban, ProductType productType, WithdrawalPolicy withdrawalPolicy, Clock clock) {
         this.id = Objects.requireNonNull(id, "id must not be null");
+        this.iban = Objects.requireNonNull(iban, "iban must not b null");
         this.balance = Money.zero("EUR");
         this.productType = productType;
         this.withdrawalPolicy = withdrawalPolicy;
         this.clock = Objects.requireNonNull(clock, "clock must not be null");
     }
 
-    public static Account openSavingsAccount(Clock clock) {
-        return openSavingsAccount(AccountId.newId(), clock);
+    public static Account openSavingsAccount(Iban iban, Clock clock) {
+        return openSavingsAccount(AccountId.newId(), iban, clock);
     }
 
-    public static Account openSavingsAccount(AccountId id, Clock clock) {
-        return new Account(id, ProductType.SAVINGS_ACCOUNT, new NoOverdraftPolicy(), clock);
+    public static Account openSavingsAccount(AccountId id, Iban iban, Clock clock) {
+        return new Account(id, iban, ProductType.SAVINGS_ACCOUNT, new NoOverdraftPolicy(), clock);
     }
 
-    public static Account openCurrentAccount(Money overdraftLimit, Clock clock) {
-        return new Account(AccountId.newId(), ProductType.CURRENT_ACCOUNT,
+    public static Account openCurrentAccount(Iban iban, Money overdraftLimit, Clock clock) {
+        return new Account(AccountId.newId(), iban, ProductType.CURRENT_ACCOUNT,
                 new ArrangedOverdraftPolicy(overdraftLimit), clock);
     }
 
@@ -49,6 +52,10 @@ public final class Account {
 
     public ProductType productType() {
         return productType;
+    }
+
+    public Iban iban() {
+        return iban;
     }
 
     public void deposit(Money amount) {
