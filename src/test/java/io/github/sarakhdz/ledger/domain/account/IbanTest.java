@@ -36,4 +36,19 @@ class IbanTest {
         assertThatThrownBy(() -> Iban.parse("NL91ABNA0417164301"))   // last digit changed
                 .isInstanceOf(InvalidIbanException.class);
     }
+
+    @Test
+    void formatsAndMasks() {
+        Iban iban = Iban.parse("NL91ABNA0417164300");
+
+        assertThat(iban.formatted()).isEqualTo("NL91 ABNA 0417 1643 00");
+        assertThat(iban.masked()).isEqualTo("NL91 **** **** **43 00");
+        assertThat(iban).hasToString("NL91 **** **** **43 00");
+    }
+
+    @Test
+    void errorMessagesNeverContainTheIban() {
+        assertThatThrownBy(() -> Iban.parse("NL91ABNA0417164301"))
+                .hasMessageNotContaining("0417164301");
+    }
 }

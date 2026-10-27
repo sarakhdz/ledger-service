@@ -31,4 +31,30 @@ public record Iban(String value) {
         return new BigInteger(digits.toString()).mod(BigInteger.valueOf(97)).intValue();
     }
 
+    public String formatted() {
+        return groupsOfFour(value);
+    }
+
+    public String masked() {
+        String hidden = value.substring(0, 4) + "*".repeat(10) + value.substring(14);
+        return groupsOfFour(hidden);
+    }
+
+    @Override
+    public String toString() {
+        return masked();
+    }
+
+    private static String groupsOfFour(String text) {
+        StringBuilder result = new StringBuilder();
+        char[] chars = text.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            if (i > 0 && i % 4 == 0) {
+                result.append(' ');
+            }
+            result.append(chars[i]);
+        }
+        return result.toString();
+    }
+
 }
