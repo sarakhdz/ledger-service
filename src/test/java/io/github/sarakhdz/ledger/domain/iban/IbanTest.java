@@ -1,4 +1,4 @@
-package io.github.sarakhdz.ledger.domain.account;
+package io.github.sarakhdz.ledger.domain.iban;
 
 import org.junit.jupiter.api.Test;
 

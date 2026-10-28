@@ -1,5 +1,6 @@
 package io.github.sarakhdz.ledger.domain.account;
 
+import io.github.sarakhdz.ledger.domain.iban.Iban;
 import io.github.sarakhdz.ledger.domain.money.CurrencyMismatchException;
 import io.github.sarakhdz.ledger.domain.money.InvalidAmountException;
 import io.github.sarakhdz.ledger.domain.money.Money;
@@ -17,10 +18,11 @@ class AccountTest {
 
     private static final Instant NOW = Instant.parse("2026-10-24T10:00:00Z");
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
+    private static final Iban IBAN = Iban.parse("NL26LEDG0123456789");
 
     @Test
     void newSavingsAccountStartsAtZero() {
-        Account account = Account.openSavingsAccount(clock);
+        Account account = Account.openSavingsAccount(IBAN, clock);
 
         assertThat(account.balance()).isEqualTo(Money.zero("EUR"));
         assertThat(account.productType()).isEqualTo(ProductType.SAVINGS_ACCOUNT);
@@ -28,7 +30,7 @@ class AccountTest {
 
     @Test
     void depositIncreasesTheBalance() {
-        Account account = Account.openSavingsAccount(clock);
+        Account account = Account.openSavingsAccount(IBAN, clock);
         account.deposit(Money.of("100.00", "EUR"));
         account.deposit(Money.of("25.50", "EUR"));
 
@@ -37,7 +39,7 @@ class AccountTest {
 
     @Test
     void rejectsZeroNegativeAndForeignDeposits() {
-        Account account = Account.openSavingsAccount(clock);
+        Account account = Account.openSavingsAccount(IBAN, clock);
 
         assertThatThrownBy(() -> account.deposit(Money.of("0.00", "EUR")))
                 .isInstanceOf(InvalidAmountException.class);
@@ -50,7 +52,7 @@ class AccountTest {
 
     @Test
     void savingsCanWithdrawTheFullBalanceButNotOneCentMore() {
-        Account account = Account.openSavingsAccount(clock);
+        Account account = Account.openSavingsAccount(IBAN, clock);
         account.deposit(Money.of("100.00", "EUR"));
 
         assertThatThrownBy(() -> account.withdraw(Money.of("100.01", "EUR")))
@@ -63,7 +65,7 @@ class AccountTest {
 
     @Test
     void currentAccountCanGoDownToTheOverdraftLimitButNotBeyond() {
-        Account account = Account.openCurrentAccount(Money.of("500.00", "EUR"), clock);
+        Account account = Account.openCurrentAccount(IBAN, Money.of("500.00", "EUR"), clock);
 
         assertThat(account.productType()).isEqualTo(ProductType.CURRENT_ACCOUNT);
 
@@ -77,13 +79,13 @@ class AccountTest {
 
     @Test
     void rejectsNegativeOverdraftLimit() {
-        assertThatThrownBy(() -> Account.openCurrentAccount(Money.of("-1.00", "EUR"), clock))
+        assertThatThrownBy(() -> Account.openCurrentAccount(IBAN, Money.of("-1.00", "EUR"), clock))
                 .isInstanceOf(InvalidAmountException.class);
     }
 
     @Test
     void rejectsZeroNegativeAndForeignWithdrawals() {
-        Account account = Account.openCurrentAccount(Money.of("100.00", "EUR"), clock);
+        Account account = Account.openCurrentAccount(IBAN, Money.of("100.00", "EUR"), clock);
 
         assertThatThrownBy(() -> account.withdraw(Money.of("0.00", "EUR")))
                 .isInstanceOf(InvalidAmountException.class);
@@ -97,18 +99,18 @@ class AccountTest {
     @Test
     void accountsWithTheSameIdAreEqualWhateverTheirBalance() {
         AccountId id = AccountId.newId();
-        Account first = Account.openSavingsAccount(id, clock);
-        Account second = Account.openSavingsAccount(id, clock);
+        Account first = Account.openSavingsAccount(id, IBAN, clock);
+        Account second = Account.openSavingsAccount(id, IBAN, clock);
         second.deposit(Money.of("50.00", "EUR"));
 
         assertThat(first).isEqualTo(second);
         assertThat(first.hashCode()).isEqualTo(second.hashCode());
-        assertThat(first).isNotEqualTo(Account.openSavingsAccount(clock));   // different id
+        assertThat(first).isNotEqualTo(Account.openSavingsAccount(IBAN, clock));   // different id
     }
 
     @Test
     void currentAccountWithZeroLimitCannotGoBelowZero() {
-        Account account = Account.openCurrentAccount(Money.zero("EUR"), clock);
+        Account account = Account.openCurrentAccount(IBAN, Money.zero("EUR"), clock);
         account.deposit(Money.of("10.00", "EUR"));
 
         account.withdraw(Money.of("10.00", "EUR"));
@@ -120,7 +122,7 @@ class AccountTest {
 
     @Test
     void depositRecordsALedgerEntry() {
-        Account account = Account.openSavingsAccount(clock);
+        Account account = Account.openSavingsAccount(IBAN, clock);
         account.deposit(Money.of("100.00", "EUR"));
 
         assertThat(account.entries()).hasSize(1);
@@ -134,7 +136,7 @@ class AccountTest {
 
     @Test
     void withdrawalRecordsAnEntryAndRejectedOperationsRecordNothing() {
-        Account account = Account.openSavingsAccount(clock);
+        Account account = Account.openSavingsAccount(IBAN, clock);
         account.deposit(Money.of("100.00", "EUR"));
         account.withdraw(Money.of("30.00", "EUR"));
 
@@ -152,7 +154,7 @@ class AccountTest {
 
     @Test
     void entriesCannotBeModifiedFromOutside() {
-        Account account = Account.openSavingsAccount(clock);
+        Account account = Account.openSavingsAccount(IBAN, clock);
         account.deposit(Money.of("10.00", "EUR"));
 
         List<LedgerEntry> entries = account.entries();
@@ -163,7 +165,7 @@ class AccountTest {
 
     @Test
     void balanceAlwaysMatchesTheEntries() {
-        Account account = Account.openCurrentAccount(Money.of("200.00", "EUR"), clock);
+        Account account = Account.openCurrentAccount(IBAN, Money.of("200.00", "EUR"), clock);
         account.deposit(Money.of("100.00", "EUR"));
         account.withdraw(Money.of("250.00", "EUR"));
         account.deposit(Money.of("40.00", "EUR"));
@@ -181,7 +183,7 @@ class AccountTest {
 
     @Test
     void refusedWithdrawalCarriesItsErrorCode() {
-        Account account = Account.openSavingsAccount(clock);
+        Account account = Account.openSavingsAccount(IBAN, clock);
 
         assertThatThrownBy(() -> account.withdraw(Money.of("1.00", "EUR")))
                 .isInstanceOfSatisfying(InsufficientFundsException.class,
@@ -190,10 +192,17 @@ class AccountTest {
 
     @Test
     void invalidAmountCarriesItsErrorCode() {
-        Account account = Account.openSavingsAccount(clock);
+        Account account = Account.openSavingsAccount(IBAN, clock);
 
         assertThatThrownBy(() -> account.deposit(Money.of("0.00", "EUR")))
                 .isInstanceOfSatisfying(InvalidAmountException.class,
                         e -> assertThat(e.errorCode()).isEqualTo("INVALID_AMOUNT"));
+    }
+
+    @Test
+    void accountKeepsTheIbanItWasOpenedWith() {
+        Account account = Account.openSavingsAccount(IBAN, clock);
+
+        assertThat(account.iban()).isEqualTo(IBAN);
     }
 }
