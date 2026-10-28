@@ -22,7 +22,7 @@ public final class Account {
 
     private Account(AccountId id, Iban iban, ProductType productType, WithdrawalPolicy withdrawalPolicy, Clock clock) {
         this.id = Objects.requireNonNull(id, "id must not be null");
-        this.iban = Objects.requireNonNull(iban, "iban must not b null");
+        this.iban = Objects.requireNonNull(iban, "iban must not be null");
         this.balance = Money.zero("EUR");
         this.productType = productType;
         this.withdrawalPolicy = withdrawalPolicy;
