@@ -13,6 +13,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class AccountQueriesTest {
 
@@ -54,19 +55,9 @@ class AccountQueriesTest {
         Account minus100 = openCurrentAccount(3);
         minus100.withdraw(Money.of("100.00", "EUR"));
 
-
         List<Account> result = queries.accountsInOverdraft();
 
         assertThat(result).containsExactly(minus300, minus100, minus20);
-    }
-
-    private Account openCurrentAccount(long accountNumber) {
-        Account account = Account.openCurrentAccount(
-                ibans.forAccountNumber(accountNumber),
-                Money.of("500.00", "EUR"),
-                clock);
-        repository.save(account);
-        return account;
     }
 
     @Test
@@ -87,4 +78,63 @@ class AccountQueriesTest {
                         Money.of("30.00", "EUR"));
     }
 
+    @Test
+    void ignoresDeposits() {
+        Account first = openCurrentAccount(1);
+        first.deposit(Money.of("1000.00", "EUR"));
+        first.withdraw(Money.of("20.00", "EUR"));
+
+        List<LedgerEntry> result = queries.largestWithdrawals(2);
+
+        assertThat(result)
+                .extracting(LedgerEntry::amount)
+                .containsExactly(Money.of("20.00", "EUR"));
+    }
+
+    @Test
+    void returnsAllWithdrawalsWhenThereAreFewerThanN() {
+        Account first = openCurrentAccount(1);
+        first.withdraw(Money.of("10.00", "EUR"));
+        first.withdraw(Money.of("20.00", "EUR"));
+
+        List<LedgerEntry> result = queries.largestWithdrawals(5);
+
+        assertThat(result)
+                .extracting(LedgerEntry::amount)
+                .containsExactly(Money.of("20.00", "EUR"), Money.of("10.00", "EUR"));
+    }
+
+    @Test
+    void returnsEmptyListWhenNIsZero() {
+        Account first = openCurrentAccount(1);
+        first.withdraw(Money.of("10.00", "EUR"));
+
+        List<LedgerEntry> result = queries.largestWithdrawals(0);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void rejectsNegativeN() {
+        assertThatThrownBy(() -> queries.largestWithdrawals(-1)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void returnsEmptyListWhenThereAreNoWithdrawals() {
+        openCurrentAccount(1);
+
+        List<LedgerEntry> result = queries.largestWithdrawals(5);
+
+        assertThat(result).isEmpty();
+    }
+
+
+    private Account openCurrentAccount(long accountNumber) {
+        Account account = Account.openCurrentAccount(
+                ibans.forAccountNumber(accountNumber),
+                Money.of("500.00", "EUR"),
+                clock);
+        repository.save(account);
+        return account;
+    }
 }
