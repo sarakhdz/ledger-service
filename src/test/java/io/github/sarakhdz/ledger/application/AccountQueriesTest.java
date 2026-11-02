@@ -1,6 +1,7 @@
 package io.github.sarakhdz.ledger.application;
 
 import io.github.sarakhdz.ledger.domain.account.Account;
+import io.github.sarakhdz.ledger.domain.account.LedgerEntry;
 import io.github.sarakhdz.ledger.domain.iban.IbanGenerator;
 import io.github.sarakhdz.ledger.domain.money.Money;
 import io.github.sarakhdz.ledger.infrastructure.persistence.InMemoryAccountRepository;
@@ -66,6 +67,24 @@ class AccountQueriesTest {
                 clock);
         repository.save(account);
         return account;
+    }
+
+    @Test
+    void returnsTheNBiggestWithdrawalsAcrossAllAccountsBiggestFirst() {
+        Account first = openCurrentAccount(1);
+        first.withdraw(Money.of("10.00", "EUR"));
+        first.withdraw(Money.of("50.00", "EUR"));
+        Account second = openCurrentAccount(2);
+        second.withdraw(Money.of("30.00", "EUR"));
+        second.withdraw(Money.of("70.00", "EUR"));
+
+        List<LedgerEntry> result = queries.largestWithdrawals(3);
+
+        assertThat(result)
+                .extracting(LedgerEntry::amount)
+                .containsExactly(Money.of("70.00", "EUR"),
+                        Money.of("50.00", "EUR"),
+                        Money.of("30.00", "EUR"));
     }
 
 }

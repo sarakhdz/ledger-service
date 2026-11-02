@@ -2,6 +2,8 @@ package io.github.sarakhdz.ledger.application;
 
 import io.github.sarakhdz.ledger.domain.account.Account;
 import io.github.sarakhdz.ledger.domain.account.AccountRepository;
+import io.github.sarakhdz.ledger.domain.account.EntryType;
+import io.github.sarakhdz.ledger.domain.account.LedgerEntry;
 
 import java.util.Comparator;
 import java.util.List;
@@ -22,4 +24,15 @@ public final class AccountQueries {
                 .toList();
     }
 
+    public List<LedgerEntry> largestWithdrawals(int n) {
+        if (n < 0) {
+            throw new IllegalArgumentException("n must not be negative, got: " + n);
+        }
+        return repository.findAll().stream()
+                .flatMap(account -> account.entries().stream())
+                .filter(entry -> entry.type() == EntryType.WITHDRAWAL)
+                .sorted(Comparator.comparing(entry -> entry.amount().amount(), Comparator.reverseOrder()))
+                .limit(n)
+                .toList();
+    }
 }
