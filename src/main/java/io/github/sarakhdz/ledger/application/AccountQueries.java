@@ -1,10 +1,8 @@
 package io.github.sarakhdz.ledger.application;
 
-import io.github.sarakhdz.ledger.domain.account.Account;
-import io.github.sarakhdz.ledger.domain.account.AccountRepository;
-import io.github.sarakhdz.ledger.domain.account.EntryType;
-import io.github.sarakhdz.ledger.domain.account.LedgerEntry;
+import io.github.sarakhdz.ledger.domain.account.*;
 
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -33,6 +31,18 @@ public final class AccountQueries {
                 .filter(entry -> entry.type() == EntryType.WITHDRAWAL)
                 .sorted(Comparator.comparing(entry -> entry.amount().amount(), Comparator.reverseOrder()))
                 .limit(n)
+                .toList();
+    }
+
+    public List<LedgerEntry> entriesBetween(AccountId id, Instant from, Instant to) {
+        if (to.isBefore(from)) {
+            throw new IllegalArgumentException("to must not be before from");
+        }
+        Account account = repository.findById(id).orElseThrow(() -> new AccountNotFoundException(id));
+        return account.entries().stream()
+                .filter(entry -> !entry.occurredAt().isBefore(from))
+                .filter(entry -> entry.occurredAt().isBefore(to))
+                .sorted(Comparator.comparing(LedgerEntry::occurredAt))
                 .toList();
     }
 }

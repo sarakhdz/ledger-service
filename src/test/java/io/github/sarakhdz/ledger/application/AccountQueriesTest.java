@@ -5,11 +5,11 @@ import io.github.sarakhdz.ledger.domain.account.LedgerEntry;
 import io.github.sarakhdz.ledger.domain.iban.IbanGenerator;
 import io.github.sarakhdz.ledger.domain.money.Money;
 import io.github.sarakhdz.ledger.infrastructure.persistence.InMemoryAccountRepository;
+import io.github.sarakhdz.ledger.testsupport.TestClock;
 import org.junit.jupiter.api.Test;
 
-import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,10 +17,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class AccountQueriesTest {
 
-    private final Clock clock = Clock.fixed(Instant.parse("2026-10-29T10:00:00Z"), ZoneOffset.UTC);
     private final IbanGenerator ibans = new IbanGenerator();
     private final InMemoryAccountRepository repository = new InMemoryAccountRepository();
     private final AccountQueries queries = new AccountQueries(repository);
+    private final TestClock clock = new TestClock(Instant.parse("2026-10-01T09:00:00Z"));
 
     @Test
     void returnsOnlyAccountsWithNegativeBalance() {
@@ -126,6 +126,26 @@ class AccountQueriesTest {
         List<LedgerEntry> result = queries.largestWithdrawals(5);
 
         assertThat(result).isEmpty();
+    }
+
+    @Test
+    void returnsOnlyEntriesInsideThePeriod() {
+        Account account = openCurrentAccount(1);
+        account.deposit(Money.of("10.00", "EUR"));
+        clock.advance(Duration.ofHours(1));
+        account.deposit(Money.of("20.00", "EUR"));
+        clock.advance(Duration.ofHours(1));
+        account.deposit(Money.of("30.00", "EUR"));
+        clock.advance(Duration.ofHours(1));
+        account.deposit(Money.of("40.00", "EUR"));
+
+        List<LedgerEntry> result = queries.entriesBetween(account.id(),
+                Instant.parse("2026-10-01T09:30:00Z"),
+                Instant.parse("2026-10-01T11:30:00Z"));
+
+        assertThat(result)
+                .extracting(LedgerEntry::amount)
+                .containsExactly(Money.of("20.00", "EUR"), Money.of("30.00", "EUR"));
     }
 
 
