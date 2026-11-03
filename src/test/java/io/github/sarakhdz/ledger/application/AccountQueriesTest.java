@@ -1,6 +1,8 @@
 package io.github.sarakhdz.ledger.application;
 
 import io.github.sarakhdz.ledger.domain.account.Account;
+import io.github.sarakhdz.ledger.domain.account.AccountId;
+import io.github.sarakhdz.ledger.domain.account.AccountNotFoundException;
 import io.github.sarakhdz.ledger.domain.account.LedgerEntry;
 import io.github.sarakhdz.ledger.domain.iban.IbanGenerator;
 import io.github.sarakhdz.ledger.domain.money.Money;
@@ -146,6 +148,104 @@ class AccountQueriesTest {
         assertThat(result)
                 .extracting(LedgerEntry::amount)
                 .containsExactly(Money.of("20.00", "EUR"), Money.of("30.00", "EUR"));
+    }
+
+    @Test
+    void ignoresEntriesOfOtherAccounts() {
+        Account mine = openCurrentAccount(1);
+        Account other = openCurrentAccount(2);
+        mine.deposit(Money.of("10.00", "EUR"));
+        other.deposit(Money.of("20.00", "EUR"));
+
+        List<LedgerEntry> result = queries.entriesBetween(mine.id(),
+                Instant.parse("2026-10-01T09:00:00Z"),
+                Instant.parse("2026-10-01T10:00:00Z"));
+
+        assertThat(result)
+                .extracting(LedgerEntry::amount)
+                .containsExactly(Money.of("10.00", "EUR"));
+    }
+
+    @Test
+    void includesAnEntryExactlyAtFrom() {
+        Account account = openCurrentAccount(1);
+        account.deposit(Money.of("10.00", "EUR"));
+
+        List<LedgerEntry> result = queries.entriesBetween(account.id(),
+                Instant.parse("2026-10-01T09:00:00Z"),
+                Instant.parse("2026-10-01T10:00:00Z"));
+
+        assertThat(result)
+                .extracting(LedgerEntry::amount)
+                .containsExactly(Money.of("10.00", "EUR"));
+    }
+
+    @Test
+    void excludesAnEntryExactlyAtTo() {
+        Account account = openCurrentAccount(1);
+        account.deposit(Money.of("10.00", "EUR"));
+        clock.advance(Duration.ofHours(1));
+        account.deposit(Money.of("20.00", "EUR"));
+
+        List<LedgerEntry> result = queries.entriesBetween(account.id(),
+                Instant.parse("2026-10-01T09:00:00Z"),
+                Instant.parse("2026-10-01T10:00:00Z"));
+
+        assertThat(result)
+                .extracting(LedgerEntry::amount)
+                .containsExactly(Money.of("10.00", "EUR"));
+
+    }
+
+    @Test
+    void throwsAccountNotFoundForAnUnknownAccount() {
+        assertThatThrownBy(() -> queries.entriesBetween(AccountId.newId(),
+                Instant.parse("2026-10-01T09:00:00Z"),
+                Instant.parse("2026-10-01T10:00:00Z")))
+                .isInstanceOfSatisfying(AccountNotFoundException.class,
+                        e -> assertThat(e.errorCode()).isEqualTo("ACCOUNT_NOT_FOUND"));
+    }
+
+    @Test
+    void rejectsFromAfterTo() {
+        Account account = openCurrentAccount(1);
+
+        assertThatThrownBy(() -> queries.entriesBetween(account.id(),
+                Instant.parse("2026-10-01T10:00:00Z"),
+                Instant.parse("2026-10-01T09:00:00Z")))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void returnsEmptyListWhenNothingHappenedInThePeriod() {
+        Account account = openCurrentAccount(1);
+        account.deposit(Money.of("10.00", "EUR"));
+
+        List<LedgerEntry> result = queries.entriesBetween(account.id(),
+                Instant.parse("2026-10-01T10:00:00Z"),
+                Instant.parse("2026-10-01T10:30:00Z"));
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void returnsEntriesOldestFirst() {
+        Account account = openCurrentAccount(1);
+        account.deposit(Money.of("20.00", "EUR"));
+        clock.advance(Duration.ofHours(1));
+        account.deposit(Money.of("10.00", "EUR"));
+        clock.advance(Duration.ofHours(1));
+        account.deposit(Money.of("30.00", "EUR"));
+
+        List<LedgerEntry> result = queries.entriesBetween(account.id(),
+                Instant.parse("2026-10-01T09:00:00Z"),
+                Instant.parse("2026-10-01T11:30:00Z"));
+
+        assertThat(result)
+                .extracting(LedgerEntry::amount)
+                .containsExactly(Money.of("20.00", "EUR"),
+                        Money.of("10.00", "EUR"),
+                        Money.of("30.00", "EUR"));
     }
 
 
