@@ -14,6 +14,13 @@ public final class TestClock extends Clock {
         now = now.plus(duration);
     }
 
+    public void moveTo(Instant target) {
+        if (target.isBefore(now)) {
+            throw new IllegalArgumentException("TestClock cannot go back in time: " + now + " -> " + target);
+        }
+        now = target;
+    }
+
     @Override
     public Instant instant() {
         return now;
