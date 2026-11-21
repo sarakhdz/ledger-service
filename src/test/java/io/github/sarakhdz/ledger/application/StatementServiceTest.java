@@ -25,7 +25,7 @@ class StatementServiceTest {
     private final IbanGenerator ibans = new IbanGenerator();
     private final InMemoryAccountRepository repository = new InMemoryAccountRepository();
     private final StatementService service = new StatementService(repository);
-    private final TestClock clock = new TestClock(Instant.parse("2026-09-01T10:00:00Z"));
+    private final TestClock clock = new TestClock(Instant.parse("2026-08-01T10:00:00Z"));
 
     @Test
     void showsTheAccountsIbanAndTheMonth() {
@@ -151,6 +151,18 @@ class StatementServiceTest {
         Statement statement = service.generate(account.id(), OCTOBER);
 
         assertThat(statement.openingBalance()).isEqualTo(eur("0.00"));
+    }
+
+    @Test
+    void openingBalanceCarriesOverFromEarlierMonths() {
+        Account account = openAccount();
+        depositAt(account, "2026-08-15T10:00:00Z", "500.00");     // August
+        // nothing in September
+        depositAt(account, "2026-10-05T10:00:00Z", "100.00");     // October
+
+        Statement statement = service.generate(account.id(), OCTOBER);
+
+        assertThat(statement.openingBalance()).isEqualTo(eur("500.00"));
     }
 
     @Test
