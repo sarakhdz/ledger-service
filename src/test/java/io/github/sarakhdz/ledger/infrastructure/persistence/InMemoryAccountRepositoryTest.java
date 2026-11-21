@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
 
@@ -15,13 +16,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class InMemoryAccountRepositoryTest {
 
+    private static final ZoneId ZONE = ZoneId.of("Europe/Amsterdam");
     private final Clock clock = Clock.fixed(Instant.parse("2026-10-27T10:00:00Z"), ZoneOffset.UTC);
     private final IbanGenerator ibans = new IbanGenerator();
     private final InMemoryAccountRepository repository = new InMemoryAccountRepository();
 
     @Test
     void savedAccountCanBeFoundByIdAndIban() {
-        Account account = Account.openSavingsAccount(ibans.forAccountNumber(1), clock);
+        Account account = Account.openSavingsAccount(ibans.forAccountNumber(1), ZONE, clock);
         repository.save(account);
 
         assertThat(repository.findById(account.id())).contains(account);
@@ -36,7 +38,7 @@ class InMemoryAccountRepositoryTest {
 
     @Test
     void savingTheSameAccountTwiceKeepsOne() {
-        Account account = Account.openSavingsAccount(ibans.forAccountNumber(1), clock);
+        Account account = Account.openSavingsAccount(ibans.forAccountNumber(1), ZONE, clock);
         repository.save(account);
         repository.save(account);
 
@@ -45,8 +47,8 @@ class InMemoryAccountRepositoryTest {
 
     @Test
     void findAllReturnsEveryAccountAsAReadOnlyList() {
-        repository.save(Account.openSavingsAccount(ibans.forAccountNumber(1), clock));
-        repository.save(Account.openSavingsAccount(ibans.forAccountNumber(2), clock));
+        repository.save(Account.openSavingsAccount(ibans.forAccountNumber(1), ZONE, clock));
+        repository.save(Account.openSavingsAccount(ibans.forAccountNumber(2), ZONE, clock));
 
         List<Account> all = repository.findAll();
         assertThat(all).hasSize(2);
