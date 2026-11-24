@@ -5,6 +5,7 @@ import io.github.sarakhdz.ledger.domain.money.InvalidAmountException;
 import io.github.sarakhdz.ledger.domain.money.Money;
 
 import java.time.Clock;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -16,30 +17,33 @@ public final class Account {
     private final Iban iban;
     private final ProductType productType;
     private final WithdrawalPolicy withdrawalPolicy;
+    private final ZoneId zone;
     private final Clock clock;
     private Money balance;
     private final List<LedgerEntry> entries = new ArrayList<>();
 
-    private Account(AccountId id, Iban iban, ProductType productType, WithdrawalPolicy withdrawalPolicy, Clock clock) {
+    private Account(AccountId id, Iban iban, ProductType productType, WithdrawalPolicy withdrawalPolicy,
+                    ZoneId zone, Clock clock) {
         this.id = Objects.requireNonNull(id, "id must not be null");
         this.iban = Objects.requireNonNull(iban, "iban must not be null");
         this.balance = Money.zero("EUR");
         this.productType = productType;
         this.withdrawalPolicy = withdrawalPolicy;
+        this.zone = Objects.requireNonNull(zone, "zone must not be null");
         this.clock = Objects.requireNonNull(clock, "clock must not be null");
     }
 
-    public static Account openSavingsAccount(Iban iban, Clock clock) {
-        return openSavingsAccount(AccountId.newId(), iban, clock);
+    public static Account openSavingsAccount(Iban iban, ZoneId zone, Clock clock) {
+        return openSavingsAccount(AccountId.newId(), iban, zone, clock);
     }
 
-    public static Account openSavingsAccount(AccountId id, Iban iban, Clock clock) {
-        return new Account(id, iban, ProductType.SAVINGS_ACCOUNT, new NoOverdraftPolicy(), clock);
+    public static Account openSavingsAccount(AccountId id, Iban iban, ZoneId zone, Clock clock) {
+        return new Account(id, iban, ProductType.SAVINGS_ACCOUNT, new NoOverdraftPolicy(), zone, clock);
     }
 
-    public static Account openCurrentAccount(Iban iban, Money overdraftLimit, Clock clock) {
+    public static Account openCurrentAccount(Iban iban, ZoneId zone, Money overdraftLimit, Clock clock) {
         return new Account(AccountId.newId(), iban, ProductType.CURRENT_ACCOUNT,
-                new ArrangedOverdraftPolicy(overdraftLimit), clock);
+                new ArrangedOverdraftPolicy(overdraftLimit), zone, clock);
     }
 
     public AccountId id() {
@@ -56,6 +60,10 @@ public final class Account {
 
     public Iban iban() {
         return iban;
+    }
+
+    public ZoneId zone() {
+        return zone;
     }
 
     public void deposit(Money amount) {

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class AccountQueriesTest {
 
+    private static final ZoneId ZONE = ZoneId.of("Europe/Amsterdam");
     private final IbanGenerator ibans = new IbanGenerator();
     private final InMemoryAccountRepository repository = new InMemoryAccountRepository();
     private final AccountQueries queries = new AccountQueries(repository);
@@ -252,6 +254,7 @@ class AccountQueriesTest {
     private Account openCurrentAccount(long accountNumber) {
         Account account = Account.openCurrentAccount(
                 ibans.forAccountNumber(accountNumber),
+                ZONE,
                 Money.of("500.00", "EUR"),
                 clock);
         repository.save(account);
